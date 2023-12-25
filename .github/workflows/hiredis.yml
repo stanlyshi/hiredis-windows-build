@@ -2,7 +2,11 @@ name: Build Hiredis
 
 on:
   workflow_dispatch:
-
+    inputs:
+      branch:
+        description: '填写分支或tag'
+        required: false
+        default: 'master'
 env:
   author: redis
   repo: hiredis
@@ -31,7 +35,11 @@ jobs:
       
       - name: Clone Source
         run: |
-          git clone https://github.com/${{ env.author }}/${{ env.repo }}.git ${{ github.workspace }}\${{ env.repo }}
+          if ( "${{github.event.inputs.branch}}" -eq "" ) {
+            git clone https://github.com/${{ env.author }}/${{ env.repo }}.git ${{ github.workspace }}\${{ env.repo }}
+          } else {
+            git clone -b ${{github.event.inputs.branch}} https://github.com/${{ env.author }}/${{ env.repo }}.git ${{ github.workspace }}\${{ env.repo }}
+          }
           cd ${{ github.workspace }}\${{ env.repo }}
           $git_head = git rev-parse HEAD
           $git_head = $git_head.Substring(0,7)
