@@ -79,8 +79,7 @@ jobs:
           }
           
           cd ..
-          7z a -tzip hiredis.zip hiredis.h read.h sds.h async.h alloc.h sockcompat.h adapters
-          Copy-Item .\hiredis.zip .\build\${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}\hiredis.zip -Force
+          7z a -tzip .\build\${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}\hiredis.zip hiredis.h read.h sds.h async.h alloc.h sockcompat.h adapters
 
       - name: Release Hiredis
         continue-on-error: true
