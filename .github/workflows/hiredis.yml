@@ -32,7 +32,10 @@ jobs:
       - name: Clone Source
         run: |
           git clone https://github.com/${{ env.author }}/${{ env.repo }}.git ${{ github.workspace }}\${{ env.repo }}
-          echo "commit=$(git rev-parse HEAD)" >> $GITHUB_ENV
+          $git_head = git rev-parse HEAD
+          echo "git_head=$git_head" >> $GITHUB_ENV
+          $hiredis_version = Get-Content -Path hiredis.h | Where-Object { $_ -like "*#define HIREDIS_SONAME*" } | ForEach-Object {$_ -Split " "} | Select-Object -Last 1
+          echo "hiredis_version=$hiredis_version" >> $GITHUB_ENV
           mkdir ${{ github.workspace }}\${{ env.repo }}\build
           
       - name: Run CMake
@@ -80,7 +83,7 @@ jobs:
           cd ${{ github.workspace }}\${{ env.repo }}
           Copy-Item *.h .\build\hiredis\hiredis -Force
           Copy-Item adapters .\build\hiredis\hiredis\adapters -Force -Recurse
-          7z a -tzip .\hiredis-windows-${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}.zip .\build\hiredis\*
+          7z a -tzip .\hiredis-windows-${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}-${{ env.hiredis_version }}.zip .\build\hiredis\*
 
       - name: Release Hiredis
         continue-on-error: true
@@ -88,11 +91,11 @@ jobs:
         uses: ncipollo/release-action@main
         with:
           name: windows-hiredis
-          tag: ${{ env.commit }}
+          tag: ${{ env.git_head }}
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
           removeArtifacts: false
-          artifacts: "${{ github.workspace }}\\${{ env.repo }}\\hiredis-windows-${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}.zip"
+          artifacts: "${{ github.workspace }}\\${{ env.repo }}\\hiredis-windows-${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}-${{ env.hiredis_version }}.zip"
           
       - name: Upload Artifacts
         continue-on-error: true
