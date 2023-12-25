@@ -92,7 +92,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
           removeArtifacts: true
-          artifacts: "${{ github.workspace }}\\${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}\\*.*"
+          artifacts: "${{ github.workspace }}\\${{ env.repo }}\\${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}\\*.*"
           
       - name: Upload Artifacts
         continue-on-error: true
