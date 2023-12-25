@@ -6,6 +6,7 @@ on:
 env:
   author: redis
   repo: hiredis
+  workspace: ${{ github.workspace }}
   
 jobs:
   build-hiredis:
@@ -30,12 +31,12 @@ jobs:
       
       - name: Clone Source
         run: |
-          git clone https://github.com/${{ env.author }}/${{ env.repo }}.git $GITHUB_WORKSPACE\${{ env.repo }}
-          mkdir $GITHUB_WORKSPACE\${{ env.repo }}\build
+          git clone https://github.com/${{ env.author }}/${{ env.repo }}.git ${{ github.workspace }}\${{ env.repo }}
+          mkdir ${{ github.workspace }}\${{ env.repo }}\build
           
       - name: Run CMake
         run: |
-          cd $GITHUB_WORKSPACE\${{ env.repo }}\build
+          cd ${{ github.workspace }}\${{ env.repo }}\build
 
           if ( "${{ matrix.build_shared_libs }}" -eq "shared" ) {
             if ( "${{ matrix.arch }}" -eq "x64" ) {
@@ -54,7 +55,7 @@ jobs:
       - name: Build Hiredis
         id: build
         run: |
-          cd $GITHUB_WORKSPACE\${{ env.repo }}\build
+          cd ${{ github.workspace }}\${{ env.repo }}\build
           
           if ( "${{ matrix.configration }}" -eq "release" ) {
             MSBuild hiredis.vcxproj /p:Configuration=Release /p:Platform=${{ matrix.arch }}
@@ -66,7 +67,7 @@ jobs:
         continue-on-error: true
         if: steps.build.outcome == 'success'
         run: |
-          cd $GITHUB_WORKSPACE\${{ env.repo }}\build
+          cd ${{ github.workspace }}\${{ env.repo }}\build
           
           mkdir ${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}
           if ( "${{ matrix.configration }}" -eq "release" ) {
