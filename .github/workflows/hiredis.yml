@@ -79,7 +79,7 @@ jobs:
           cd ${{ github.workspace }}\${{ env.repo }}
           Copy-Item *.h .\build\hiredi\hiredis -Force
           Copy-Item adapters .\build\hiredis\hiredis\adapters -Force -Recurse
-          7z a -tzip .\build\hiredis\hiredis-windows-${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}.zip .\build\hiredis\*
+          7z a -tzip .\hiredis-windows-${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}.zip .\build\hiredis\*
 
       - name: Release Hiredis
         continue-on-error: true
@@ -91,7 +91,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
           removeArtifacts: false
-          artifacts: "${{ github.workspace }}\\${{ env.repo }}\\build\\hiredis\\hiredis-windows-${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}.zip"
+          artifacts: "${{ github.workspace }}\\${{ env.repo }}\\hiredis-windows-${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}.zip"
           
       - name: Upload Artifacts
         continue-on-error: true
