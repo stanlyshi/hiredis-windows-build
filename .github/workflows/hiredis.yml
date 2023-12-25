@@ -9,8 +9,8 @@ env:
   workspace: ${{ github.workspace }}
   
 jobs:
-  build-hiredis:
-    name: Build
+  build:
+    name: hiredis
     runs-on: windows-latest
     strategy:
       fail-fast: false
