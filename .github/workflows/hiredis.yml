@@ -78,7 +78,7 @@ jobs:
           }
           
           cd ${{ github.workspace }}\${{ env.repo }}
-          Copy-Item *.h .\build\hiredi\hiredis -Force
+          Copy-Item *.h .\build\hiredis\hiredis -Force
           Copy-Item adapters .\build\hiredis\hiredis\adapters -Force -Recurse
           7z a -tzip .\hiredis-windows-${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}.zip .\build\hiredis\*
 
