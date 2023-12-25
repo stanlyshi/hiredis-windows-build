@@ -7,6 +7,8 @@ on:
         description: '填写分支或tag'
         required: false
         default: 'master'
+  schedule:
+    - cron: 00 8 * * *
 env:
   author: redis
   repo: hiredis
