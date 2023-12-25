@@ -92,7 +92,7 @@ jobs:
         if: steps.build.outcome == 'success'
         uses: ncipollo/release-action@main
         with:
-          name: windows-hiredis
+          name: hiredis-${{ env.hiredis_version }}
           tag: ${{ env.git_head }}
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
