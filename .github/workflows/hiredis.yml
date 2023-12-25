@@ -69,29 +69,29 @@ jobs:
         run: |
           cd ${{ github.workspace }}\${{ env.repo }}\build
           
-          mkdir ${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}
+          mkdir hiredis
           if ( "${{ matrix.configration }}" -eq "release" ) {
-            Copy-Item .\Release\* .\${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}\ -Force
-            Remove-item .\Release -Force -Recurse
+            Copy-Item .\Release\* .\hiredis\ -Force
           } else {
-            Copy-Item .\Debug\* .\${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}\ -Force
-            Remove-item .\Debug -Force -Recurse
+            Copy-Item .\Debug\* .\hiredis\ -Force
           }
           
-          cd ..
-          7z a -tzip .\build\${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}\hiredis.zip hiredis.h read.h sds.h async.h alloc.h sockcompat.h adapters
+          cd ${{ github.workspace }}\${{ env.repo }}
+          Copy-Item *.h .\build\hiredis -Force
+          Copy-Item adapters .\build\hiredis\adapters -Force -Recurse
+          7z a -tzip .\build\hiredis\hiredis-windows-${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}.zip .\build\hiredis\*
 
       - name: Release Hiredis
         continue-on-error: true
         if: steps.build.outcome == 'success'
         uses: ncipollo/release-action@main
         with:
-          name: windows-${{ matrix.arch }}-${{ matrix.configration }}-${{ matrix.build_shared_libs }}
-          tag: windows-${{ matrix.arch }}-${{ matrix.configration }}-${{ matrix.build_shared_libs }}
+          name: windows-hiredis
+          tag: msbuild
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
-          removeArtifacts: true
-          artifacts: "${{ github.workspace }}\\${{ env.repo }}\\build\\${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}\\*.*"
+          removeArtifacts: false
+          artifacts: "${{ github.workspace }}\\${{ env.repo }}\\build\\hiredis\\hiredis-windows-${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}.zip"
           
       - name: Upload Artifacts
         continue-on-error: true
