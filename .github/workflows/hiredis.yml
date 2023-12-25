@@ -69,7 +69,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}\${{ env.repo }}\build
           
-          mkdir hiredis
+          mkdir hiredis\hiredis
           if ( "${{ matrix.configration }}" -eq "release" ) {
             Copy-Item .\Release\* .\hiredis\ -Force
           } else {
@@ -77,8 +77,8 @@ jobs:
           }
           
           cd ${{ github.workspace }}\${{ env.repo }}
-          Copy-Item *.h .\build\hiredis -Force
-          Copy-Item adapters .\build\hiredis\adapters -Force -Recurse
+          Copy-Item *.h .\build\hiredi\hiredis -Force
+          Copy-Item adapters .\build\hiredis\hiredis\adapters -Force -Recurse
           7z a -tzip .\build\hiredis\hiredis-windows-${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}.zip .\build\hiredis\*
 
       - name: Release Hiredis
