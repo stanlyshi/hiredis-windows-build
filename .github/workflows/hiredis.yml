@@ -34,9 +34,9 @@ jobs:
           git clone https://github.com/${{ env.author }}/${{ env.repo }}.git ${{ github.workspace }}\${{ env.repo }}
           cd ${{ github.workspace }}\${{ env.repo }}
           $git_head = git rev-parse HEAD
-          echo "git_head=$git_head" >> $GITHUB_ENV
+          echo "git_head=$git_head" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           $hiredis_version = Get-Content -Path hiredis.h | Where-Object { $_ -like "*#define HIREDIS_SONAME*" } | ForEach-Object {$_ -Split " "} | Select-Object -Last 1
-          echo "hiredis_version=$hiredis_version" >> $GITHUB_ENV
+          echo "hiredis_version=$hiredis_version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           mkdir ${{ github.workspace }}\${{ env.repo }}\build
           
       - name: Run CMake
