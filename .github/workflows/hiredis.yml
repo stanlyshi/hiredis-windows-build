@@ -32,7 +32,7 @@ jobs:
           msbuild-architecture: ${{ matrix.arch }}
       - name: Install 7-Zip and Git using Chocolatey
         run: |
-          choco install git 7zip.install -y
+          choco install 7zip.install -y
         shell: powershell
       
       - name: Clone Source
