@@ -32,6 +32,7 @@ jobs:
       - name: Clone Source
         run: |
           git clone https://github.com/${{ env.author }}/${{ env.repo }}.git ${{ github.workspace }}\${{ env.repo }}
+          cd ${{ github.workspace }}\${{ env.repo }}
           $git_head = git rev-parse HEAD
           echo "git_head=$git_head" >> $GITHUB_ENV
           $hiredis_version = Get-Content -Path hiredis.h | Where-Object { $_ -like "*#define HIREDIS_SONAME*" } | ForEach-Object {$_ -Split " "} | Select-Object -Last 1
