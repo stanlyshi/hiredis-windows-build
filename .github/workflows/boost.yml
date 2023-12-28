@@ -119,9 +119,9 @@ jobs:
           cd ${{ github.workspace }}\${{ env.repo }}
           mkdir release
           
-          .\b2.exe install
+          .\b2.exe install link=static threading=multi variant=release
           
-          7z a -tzip .\release\boost.h.zip C:\Boost\include\*
+          7z a -tzip .\release\boost.h.zip C:\Boost\include\*\boost
           
       - name: Release Boost
         continue-on-error: true
