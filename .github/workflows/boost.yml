@@ -8,7 +8,7 @@ on:
         required: false
         default: 'master'
   schedule:
-    - cron: 00 9 * * *
+    - cron: 00 9 */3 * *
 env:
   author: boostorg
   repo: boost
@@ -21,9 +21,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [release, debug]
-        link: [shared, static]
         model: [64, 32]
+        link: [shared, static]
+        variant: [release, debug]
         
     steps:
       - name: Git Config
@@ -66,9 +66,9 @@ jobs:
           .\b2.exe stage threading=multi runtime-link=shared link=${{ matrix.link }} address-model=${{ matrix.model }} variant=${{ matrix.variant }}
           #.\b2.exe stage threading=multi runtime-link=static link=${{ matrix.link }} address-model=${{ matrix.model }} variant=${{ matrix.variant }}
           if ( "${{ matrix.model }}" -eq "32") {
-            7z a -tzip .\release\boost-windows-win${{ matrix.model }}-${{ matrix.variant }}-${{ matrix.link }}-${{ env.version }}.zip .\stage\*
+            7z a -tzip .\release\boost-windows-win${{ matrix.model }}-${{ matrix.link }}-${{ matrix.variant }}-${{ env.version }}.zip .\stage\*
           } elseif ( "${{ matrix.model }}" -eq "64") {
-            7z a -tzip .\release\boost-windows-x${{ matrix.model }}-${{ matrix.variant }}-${{ matrix.link }}-${{ env.version }}.zip .\stage\*
+            7z a -tzip .\release\boost-windows-x${{ matrix.model }}-${{ matrix.link }}-${{ matrix.variant }}-${{ env.version }}.zip .\stage\*
           } else {
             echo "Error: The type of architecture that is not supported."
           }
@@ -136,6 +136,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
           removeArtifacts: false
-          body: "${{github.event.inputs.branch}}"
+          body: "${{ env.git_head }}"
           artifacts: "${{ github.workspace }}\\${{ env.repo }}\\release\\*.zip"
           
