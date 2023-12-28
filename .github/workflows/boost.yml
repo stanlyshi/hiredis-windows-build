@@ -23,7 +23,7 @@ jobs:
       matrix:
         variant: [release, debug]
         link: [shared, static]
-        model: [64, 86]
+        model: [64, 32]
         
     steps:
       - name: Git Config
@@ -62,9 +62,15 @@ jobs:
           
           # b2 --help
           .\b2.exe stage threading=multi link=${{ matrix.link }} address-model=${{ matrix.model }} variant=${{ matrix.variant }}
-          7z a -tzip .\release\boost-windows-x${{ matrix.model }}-${{ matrix.variant }}-${{ matrix.link }}.zip .\stage\*
+          if ( "${{ matrix.model }}" -eq "32") {
+            7z a -tzip .\release\boost-windows-win32-${{ matrix.variant }}-${{ matrix.link }}.zip .\stage\*
+          } elseif ( "${{ matrix.model }}" -eq "64") {
+            7z a -tzip .\release\boost-windows-x${{ matrix.model }}-${{ matrix.variant }}-${{ matrix.link }}.zip .\stage\*
+          } else {
+            echo "Error: The type of architecture that is not supported."
+          }
+          
           Copy-Item boost .\release\boost
-          # Remove-Item .\stage -Force -Recurse
           
       - name: Release Boost
         continue-on-error: true
