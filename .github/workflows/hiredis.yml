@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: '填写分支或tag'
+        description: '填写branch或tag或commit名称'
         required: false
         default: 'master'
   schedule:
-    - cron: 00 8 * * *
+   - cron: 00 10 * * *
 env:
   author: redis
   repo: hiredis
@@ -21,9 +21,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        configration: [release, debug]
-        build_shared_libs: [shared, static]
         arch: [x64, x86]
+        libs: [shared, static]
+        type: [release, debug]
 
     steps:
       - name: Install MSBuild
@@ -33,6 +33,7 @@ jobs:
       - name: Install 7-Zip and Git using Chocolatey
         run: |
           choco install 7zip.install -y
+          #choco install git 7zip.install -y
         shell: powershell
       
       - name: Clone Source
@@ -40,7 +41,9 @@ jobs:
           if ( "${{github.event.inputs.branch}}" -eq "" ) {
             git clone https://github.com/${{ env.author }}/${{ env.repo }}.git ${{ github.workspace }}\${{ env.repo }}
           } else {
-            git clone -b ${{github.event.inputs.branch}} https://github.com/${{ env.author }}/${{ env.repo }}.git ${{ github.workspace }}\${{ env.repo }}
+            git clone https://github.com/${{ env.author }}/${{ env.repo }}.git ${{ github.workspace }}\${{ env.repo }}
+            cd ${{ github.workspace }}\${{ env.repo }}
+            git checkout ${{github.event.inputs.branch}}
           }
           cd ${{ github.workspace }}\${{ env.repo }}
           $git_head = git rev-parse HEAD
@@ -54,7 +57,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}\${{ env.repo }}\build
 
-          if ( "${{ matrix.build_shared_libs }}" -eq "shared" ) {
+          if ( "${{ matrix.libs }}" -eq "shared" ) {
             if ( "${{ matrix.arch }}" -eq "x64" ) {
               cmake .. -A x64 -Wno-dev
             } else {
@@ -73,7 +76,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}\${{ env.repo }}\build
           
-          if ( "${{ matrix.configration }}" -eq "release" ) {
+          if ( "${{ matrix.type }}" -eq "release" ) {
             MSBuild hiredis.vcxproj /p:Configuration=Release /p:Platform=${{ matrix.arch }}
           } else {
             MSBuild hiredis.vcxproj /p:Configuration=Debug /p:Platform=${{ matrix.arch }}
@@ -86,7 +89,7 @@ jobs:
           cd ${{ github.workspace }}\${{ env.repo }}\build
           
           mkdir hiredis\hiredis
-          if ( "${{ matrix.configration }}" -eq "release" ) {
+          if ( "${{ matrix.type }}" -eq "release" ) {
             Copy-Item .\Release\* .\hiredis\ -Force
           } else {
             Copy-Item .\Debug\* .\hiredis\ -Force
@@ -95,7 +98,7 @@ jobs:
           cd ${{ github.workspace }}\${{ env.repo }}
           Copy-Item *.h .\build\hiredis\hiredis -Force
           Copy-Item adapters .\build\hiredis\hiredis\adapters -Force -Recurse
-          7z a -tzip .\hiredis-windows-${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}-${{ env.hiredis_version }}.zip .\build\hiredis\*
+          7z a -tzip .\hiredis-windows-${{ matrix.arch }}-${{ matrix.libs }}-${{ matrix.type }}-${{ env.hiredis_version }}.zip .\build\hiredis\*
 
       - name: Release Hiredis
         continue-on-error: true
@@ -103,17 +106,36 @@ jobs:
         uses: ncipollo/release-action@main
         with:
           name: hiredis-${{ env.hiredis_version }}
-          tag: ${{ env.git_head }}
+          tag: hiredis-${{ env.hiredis_version }}
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
           removeArtifacts: false
-          artifacts: "${{ github.workspace }}\\${{ env.repo }}\\hiredis-windows-${{ matrix.configration }}-${{ matrix.build_shared_libs }}-${{ matrix.arch }}-${{ env.hiredis_version }}.zip"
+          artifacts: "${{ github.workspace }}\\${{ env.repo }}\\hiredis-windows-${{ matrix.arch }}-${{ matrix.libs }}-${{ matrix.type }}-${{ env.hiredis_version }}.zip"
           
       - name: Upload Artifacts
         continue-on-error: true
         if: steps.build.outcome == 'success'
         uses: actions/upload-artifact@v3
         with:
-          name: "windows-${{ matrix.arch }}-${{ matrix.configration }}-${{ matrix.build_shared_libs }}"
+          name: "hiredis-windows-${{ matrix.arch }}-${{ matrix.libs }}-${{ matrix.type }}-${{ env.hiredis_version }}"
           path:  |
             ${{ github.workspace }}
+
+      - name: Delete Workflows
+        continue-on-error: true
+        uses: Mattraks/delete-workflow-runs@main
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 1
+          keep_minimum_runs: 3
+          
+      - name: Delete Releases
+        continue-on-error: true
+        uses: dev-drprasad/delete-older-releases@master
+        with:
+          keep_latest: 10
+          delete_tags: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        
