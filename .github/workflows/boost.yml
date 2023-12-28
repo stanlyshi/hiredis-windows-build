@@ -18,7 +18,13 @@ jobs:
   build:
     name: boost
     runs-on: windows-latest
-
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [release, debug]
+        link: [shared, static]
+        model: [x64, x86]
+        
     steps:
       - run: git config --global core.autocrlf true
       #- name: Install 7-Zip and Git using Chocolatey
@@ -44,8 +50,8 @@ jobs:
       - name: Setup Boost
         run: |
           cd ${{ github.workspace }}\${{ env.repo }}
-          ./bootstrap.bat
-          ./b2.exe -d0 headers
+          .\bootstrap.bat
+          .\b2.exe -d0 headers
           
       - name: Build Boost
         id: build
@@ -54,19 +60,10 @@ jobs:
           mkdir release
           
           # b2 --help
-          $links = "static", "shared"
-          $models = "32", "64"
-          $variants = "debug", "release"
-          foreach ($link in $links) {
-                foreach ($model in $models) {
-                    foreach ($variant in $variants) {
-                        .\b2.exe stage threading=multi link=$link address-model=$model variant=$variant
-                        7z a -tzip boost-windows-x$model-$variant-$link.zip .\stage\*
-                        Remove-Item stage -Force -Recurse
-                    }
-                }
-          }
-          7z a -tzip boost.zip .\boost
+          .\b2.exe stage threading=multi link=${{ matrix.link }} address-model=${{ matrix.model }} variant=${{ matrix.variant }}
+          7z a -tzip .\release\boost-windows-x${{ matrix.model }}-${{ matrix.variant }}-${{ matrix.link }}.zip .\stage\*
+          Copy-Item boost .\release\boost
+          # Remove-Item .\stage -Force -Recurse
           
       - name: Release Boost
         continue-on-error: true
