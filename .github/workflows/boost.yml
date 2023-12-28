@@ -16,7 +16,7 @@ env:
   
 jobs:
   build:
-    name: boost
+    name: Boost
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -61,16 +61,67 @@ jobs:
           mkdir release
           
           # b2 --help
-          .\b2.exe stage threading=multi link=${{ matrix.link }} address-model=${{ matrix.model }} variant=${{ matrix.variant }}
+          .\b2.exe stage threading=multi runtime-link=shared link=${{ matrix.link }} address-model=${{ matrix.model }} variant=${{ matrix.variant }}
+          #.\b2.exe stage threading=multi runtime-link=static link=${{ matrix.link }} address-model=${{ matrix.model }} variant=${{ matrix.variant }}
           if ( "${{ matrix.model }}" -eq "32") {
-            7z a -tzip .\release\boost-windows-win32-${{ matrix.variant }}-${{ matrix.link }}.zip .\stage\*
+            7z a -tzip .\release\boost-windows-win${{ matrix.model }}-${{ matrix.variant }}-${{ matrix.link }}.zip .\stage\*
           } elseif ( "${{ matrix.model }}" -eq "64") {
             7z a -tzip .\release\boost-windows-x${{ matrix.model }}-${{ matrix.variant }}-${{ matrix.link }}.zip .\stage\*
           } else {
             echo "Error: The type of architecture that is not supported."
           }
           
-          Copy-Item boost .\release\boost -Force -Recurse
+          #Copy-Item boost .\release\boost -Force -Recurse
+          
+      - name: Release Boost
+        continue-on-error: true
+        if: steps.build.outcome == 'success'
+        uses: ncipollo/release-action@main
+        with:
+          tag: boost-${{ env.git_head }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true
+          removeArtifacts: false
+          body: "${{github.event.inputs.branch}}"
+          artifacts: "${{ github.workspace }}\\${{ env.repo }}\\release\\*.zip"
+          
+  headfiles:
+    name: Boost Header Files
+    runs-on: windows-latest
+    
+    steps:
+      - name: Git Config
+        run: git config --global core.autocrlf true
+        
+      - name: Clone Source
+        run: |
+          if ( "${{github.event.inputs.branch}}" -eq "" ) {
+            git clone --recursive https://github.com/${{ env.author }}/${{ env.repo }}.git ${{ github.workspace }}\${{ env.repo }}
+          } else {
+            git clone --recursive https://github.com/${{ env.author }}/${{ env.repo }}.git ${{ github.workspace }}\${{ env.repo }}
+            cd ${{ github.workspace }}\${{ env.repo }}
+            git checkout ${{github.event.inputs.branch}}
+          }
+          cd ${{ github.workspace }}\${{ env.repo }}
+          $git_head = git rev-parse HEAD
+          $git_head = $git_head.Substring(0,7)
+          echo "git_head=$git_head" | Out-File -FilePath $env:GITHUB_ENV -Append
+          
+      - name: Setup Boost
+        run: |
+          cd ${{ github.workspace }}\${{ env.repo }}
+          .\bootstrap.bat
+          .\b2.exe -d0 headers
+          
+      - name: Build Boost
+        id: build
+        run: |
+          cd ${{ github.workspace }}\${{ env.repo }}
+          mkdir release
+          
+          .\b2.exe install
+          
+          7z a -tzip .\release\boost.h.zip C:\Boost\include\*
           
       - name: Release Boost
         continue-on-error: true
