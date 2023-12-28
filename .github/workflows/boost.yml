@@ -30,23 +30,23 @@ jobs:
       - name: Clone Source
         run: |
           if ( "${{github.event.inputs.branch}}" -eq "" ) {
-            git clone https://github.com/${{ env.author }}/${{ env.repo }}.git ${{ github.workspace }}\${{ env.repo }}
+            git clone --recursive https://github.com/${{ env.author }}/${{ env.repo }}.git ${{ github.workspace }}\${{ env.repo }}
           } else {
-            git clone https://github.com/${{ env.author }}/${{ env.repo }}.git ${{ github.workspace }}\${{ env.repo }}
+            git clone --recursive https://github.com/${{ env.author }}/${{ env.repo }}.git ${{ github.workspace }}\${{ env.repo }}
             cd ${{ github.workspace }}\${{ env.repo }}
             git checkout ${{github.event.inputs.branch}}
           }
           cd ${{ github.workspace }}\${{ env.repo }}
+          bootstrap
           $git_head = git rev-parse HEAD
           $git_head = $git_head.Substring(0,7)
           echo "git_head=$git_head" | Out-File -FilePath $env:GITHUB_ENV -Append
           
       - name: Setup Boost
-        shell: cmd
         run: |
           cd ${{ github.workspace }}\${{ env.repo }}
-          bootstrap
-          b2 -d0 headers
+          ./bootstrap.bat
+          ./b2.exe -d0 headers
           
       - name: Build Boost
         id: build
