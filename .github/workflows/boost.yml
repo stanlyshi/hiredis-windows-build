@@ -108,6 +108,8 @@ jobs:
           $git_head = git rev-parse HEAD
           $git_head = $git_head.Substring(0,7)
           echo "git_head=$git_head" | Out-File -FilePath $env:GITHUB_ENV -Append
+          $version = Get-Content -Path CMakeLists.txt | Where-Object { $_ -match "Boost VERSION" } | ForEach-Object {$_ -Split " "} | Select-Object -First 3 | Select-Object -Last 1
+          echo "version=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
           
       - name: Setup Boost
         run: |
