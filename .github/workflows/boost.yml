@@ -61,8 +61,8 @@ jobs:
           mkdir release
           
           # b2 --help
-          .\b2.exe -j4 stage threading=multi runtime-link=shared link=${{ matrix.link }} address-model=${{ matrix.model }} variant=${{ matrix.variant }}
-          #.\b2.exe -j4 stage threading=multi runtime-link=static link=${{ matrix.link }} address-model=${{ matrix.model }} variant=${{ matrix.variant }}
+          .\b2.exe stage threading=multi runtime-link=shared link=${{ matrix.link }} address-model=${{ matrix.model }} variant=${{ matrix.variant }}
+          #.\b2.exe stage threading=multi runtime-link=static link=${{ matrix.link }} address-model=${{ matrix.model }} variant=${{ matrix.variant }}
           if ( "${{ matrix.model }}" -eq "32") {
             7z a -tzip .\release\boost-windows-win${{ matrix.model }}-${{ matrix.variant }}-${{ matrix.link }}.zip .\stage\*
           } elseif ( "${{ matrix.model }}" -eq "64") {
@@ -119,7 +119,7 @@ jobs:
           cd ${{ github.workspace }}\${{ env.repo }}
           mkdir release
           
-          .\b2.exe -j4 install link=static threading=multi variant=release
+          .\b2.exe install link=static threading=multi variant=release
           
           7z a -tzip .\release\boost.h.zip C:\Boost\include
           
