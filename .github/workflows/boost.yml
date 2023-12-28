@@ -70,7 +70,7 @@ jobs:
             echo "Error: The type of architecture that is not supported."
           }
           
-          Copy-Item boost .\release\boost
+          Copy-Item boost .\release\boost -Force -Recurse
           
       - name: Release Boost
         continue-on-error: true
