@@ -21,11 +21,11 @@ jobs:
 
     steps:
       - run: git config --global core.autocrlf true
-      - name: Install 7-Zip and Git using Chocolatey
-        run: |
-          choco install 7zip.install -y
+      #- name: Install 7-Zip and Git using Chocolatey
+        #run: |
+          #choco install 7zip.install -y
           #choco install git 7zip.install -y
-        shell: powershell
+        #shell: powershell
       
       - name: Clone Source
         run: |
@@ -37,16 +37,16 @@ jobs:
             git checkout ${{github.event.inputs.branch}}
           }
           cd ${{ github.workspace }}\${{ env.repo }}
-          .\bootstrap.bat
           $git_head = git rev-parse HEAD
           $git_head = $git_head.Substring(0,7)
           echo "git_head=$git_head" | Out-File -FilePath $env:GITHUB_ENV -Append
           
       - name: Setup Boost
+        shell: cmd
         run: |
           cd ${{ github.workspace }}\${{ env.repo }}
-          .\bootstrap.bat
-          .\b2.exe -d0 headers
+          bootstrap
+          b2 -d0 headers
           
       - name: Build Boost
         id: build
