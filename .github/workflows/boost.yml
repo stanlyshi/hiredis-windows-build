@@ -41,9 +41,6 @@ jobs:
           $git_head = git rev-parse HEAD
           $git_head = $git_head.Substring(0,7)
           echo "git_head=$git_head" | Out-File -FilePath $env:GITHUB_ENV -Append
-          $boost_version = Get-Content -Path boost.h | Where-Object { $_ -like "*#define HIREDIS_SONAME*" } | ForEach-Object {$_ -Split " "} | Select-Object -Last 1
-          echo "boost_version=$boost_version" | Out-File -FilePath $env:GITHUB_ENV -Append
-          mkdir ${{ github.workspace }}\${{ env.repo }}\build
           
       - name: Setup Boost
         run: |
