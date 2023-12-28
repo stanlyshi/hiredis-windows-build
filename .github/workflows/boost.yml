@@ -23,14 +23,15 @@ jobs:
       matrix:
         variant: [release, debug]
         link: [shared, static]
-        model: [x64, x86]
+        model: [64, 86]
         
     steps:
-      - run: git config --global core.autocrlf true
-      #- name: Install 7-Zip and Git using Chocolatey
+      - name: Git Config
+        run: git config --global core.autocrlf true
+        
+      #- name: Install 7-Zip using Chocolatey
         #run: |
           #choco install 7zip.install -y
-          #choco install git 7zip.install -y
         #shell: powershell
       
       - name: Clone Source
