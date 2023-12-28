@@ -1,0 +1,86 @@
+name: Build Boost
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: '填写分支或tag'
+        required: false
+        default: 'master'
+  schedule:
+    - cron: 00 9 * * *
+env:
+  author: boostorg
+  repo: boost
+  workspace: ${{ github.workspace }}
+  
+jobs:
+  build:
+    name: boost
+    runs-on: windows-latest
+
+    steps:
+      - run: git config --global core.autocrlf true
+      - name: Install 7-Zip and Git using Chocolatey
+        run: |
+          choco install 7zip.install -y
+          #choco install git 7zip.install -y
+        shell: powershell
+      
+      - name: Clone Source
+        run: |
+          if ( "${{github.event.inputs.branch}}" -eq "" ) {
+            git clone https://github.com/${{ env.author }}/${{ env.repo }}.git ${{ github.workspace }}\${{ env.repo }}
+          } else {
+            git clone https://github.com/${{ env.author }}/${{ env.repo }}.git ${{ github.workspace }}\${{ env.repo }}
+            cd ${{ github.workspace }}\${{ env.repo }}
+            git checkout ${{github.event.inputs.branch}}
+          }
+          cd ${{ github.workspace }}\${{ env.repo }}
+          .\bootstrap.bat
+          $git_head = git rev-parse HEAD
+          $git_head = $git_head.Substring(0,7)
+          echo "git_head=$git_head" | Out-File -FilePath $env:GITHUB_ENV -Append
+          $boost_version = Get-Content -Path boost.h | Where-Object { $_ -like "*#define HIREDIS_SONAME*" } | ForEach-Object {$_ -Split " "} | Select-Object -Last 1
+          echo "boost_version=$boost_version" | Out-File -FilePath $env:GITHUB_ENV -Append
+          mkdir ${{ github.workspace }}\${{ env.repo }}\build
+          
+      - name: Setup Boost
+        run: |
+          cd ${{ github.workspace }}\${{ env.repo }}
+          .\bootstrap.bat
+          .\b2.exe -d0 headers
+          
+      - name: Build Boost
+        id: build
+        run: |
+          cd ${{ github.workspace }}\${{ env.repo }}
+          mkdir release
+          
+          # b2 --help
+          $links = "static", "shared"
+          $models = "32", "64"
+          $variants = "debug", "release"
+          foreach ($link in $links) {
+                foreach ($model in $models) {
+                    foreach ($variant in $variants) {
+                        .\b2.exe stage threading=multi link=$link address-model=$model variant=$variant
+                        7z a -tzip boost-windows-x$model-$variant-$link.zip .\stage\*
+                        Remove-Item stage -Force -Recurse
+                    }
+                }
+          }
+          7z a -tzip boost.zip .\boost
+          
+      - name: Release Boost
+        continue-on-error: true
+        if: steps.build.outcome == 'success'
+        uses: ncipollo/release-action@main
+        with:
+          tag: boost-${{ env.git_head }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true
+          removeArtifacts: false
+          body: "${{github.event.inputs.branch}}"
+          artifacts: "${{ github.workspace }}\\${{ env.repo }}\\release\\*.zip"
+          
