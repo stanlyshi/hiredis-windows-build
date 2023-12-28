@@ -47,6 +47,8 @@ jobs:
           $git_head = git rev-parse HEAD
           $git_head = $git_head.Substring(0,7)
           echo "git_head=$git_head" | Out-File -FilePath $env:GITHUB_ENV -Append
+          $version = Get-Content -Path CMakeLists.txt | Where-Object { $_ -like "project(Boost" } | ForEach-Object {$_ -Split " "} | Select-Object -First 3
+          echo "version=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
           
       - name: Setup Boost
         run: |
@@ -64,9 +66,9 @@ jobs:
           .\b2.exe stage threading=multi runtime-link=shared link=${{ matrix.link }} address-model=${{ matrix.model }} variant=${{ matrix.variant }}
           #.\b2.exe stage threading=multi runtime-link=static link=${{ matrix.link }} address-model=${{ matrix.model }} variant=${{ matrix.variant }}
           if ( "${{ matrix.model }}" -eq "32") {
-            7z a -tzip .\release\boost-windows-win${{ matrix.model }}-${{ matrix.variant }}-${{ matrix.link }}.zip .\stage\*
+            7z a -tzip .\release\boost-windows-win${{ matrix.model }}-${{ matrix.variant }}-${{ matrix.link }}-${{ env.version }}.zip .\stage\*
           } elseif ( "${{ matrix.model }}" -eq "64") {
-            7z a -tzip .\release\boost-windows-x${{ matrix.model }}-${{ matrix.variant }}-${{ matrix.link }}.zip .\stage\*
+            7z a -tzip .\release\boost-windows-x${{ matrix.model }}-${{ matrix.variant }}-${{ matrix.link }}-${{ env.version }}.zip .\stage\*
           } else {
             echo "Error: The type of architecture that is not supported."
           }
@@ -78,7 +80,7 @@ jobs:
         if: steps.build.outcome == 'success'
         uses: ncipollo/release-action@main
         with:
-          tag: boost-${{ env.git_head }}
+          tag: boost-${{ env.version }}
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
           removeArtifacts: false
@@ -121,14 +123,14 @@ jobs:
           
           .\b2.exe install link=static threading=multi variant=release
           
-          7z a -tzip .\release\boost.h.zip C:\Boost\include
+          7z a -tzip .\release\boost-${{ env.version }}.h.zip C:\Boost\include
           
       - name: Release Boost
         continue-on-error: true
         if: steps.build.outcome == 'success'
         uses: ncipollo/release-action@main
         with:
-          tag: boost-${{ env.git_head }}
+          tag: boost-${{ env.version }}
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
           removeArtifacts: false
