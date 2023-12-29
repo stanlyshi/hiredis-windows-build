@@ -62,7 +62,7 @@ jobs:
           
           Remove-Item ..\builds\*-obj-lib -Force -Recurse
           Remove-Item ..\builds\*-obj-curl -Force -Recurse
-		  
+
           if ("${{ matrix.debug }}" -eq "yes") {
             7z a -tzip ${{ github.workspace }}\${{ env.repo }}\libcurl-vc-${{ matrix.machine }}-release-${{ matrix.mode }}-${{ env.version }}.zip ${{ github.workspace }}\${{ env.repo }}\builds\*
           } else {
