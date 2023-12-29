@@ -49,6 +49,9 @@ jobs:
             git checkout ${{github.event.inputs.branch}}
           }
           cd ${{ github.workspace }}\${{ env.repo }}
+          
+          Rename-Item -Path .\src\tool_hugehelp.c.cvs -NewName .\src\tool_hugehelp.c -Force
+          
           $git_head = git rev-parse HEAD
           $git_head = $git_head.Substring(0,7)
           echo "git_head=$git_head" | Out-File -FilePath $env:GITHUB_ENV -Append
