@@ -24,6 +24,11 @@ jobs:
         machine: [x64, x86]
         mode: [static, dll]
         debug: [no, yes]
+        include:
+          - machine: x64
+            arch: amd64
+          - machine: x86
+            arch: amd64_x86
         
     steps:
       - name: Git Config
@@ -55,10 +60,16 @@ jobs:
           
       - name: Build libcurl
         id: build
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.arch }}
         run: |
           cd ${{ github.workspace }}\${{ env.repo }}\winbuild
           
           nmake /f Makefile.vc MACHINE=${{ matrix.machine }} MODE=${{ matrix.mode }} DEBUG=${{ matrix.debug }}
+
+      - name: Prepare libcurl
+          cd ${{ github.workspace }}\${{ env.repo }}\winbuild
           
           Remove-Item ..\builds\*-obj-lib -Force -Recurse
           Remove-Item ..\builds\*-obj-curl -Force -Recurse
