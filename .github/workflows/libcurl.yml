@@ -50,7 +50,7 @@ jobs:
           }
           cd ${{ github.workspace }}\${{ env.repo }}
           
-          Rename-Item .\src\tool_hugehelp.c.cvs .\src\tool_hugehelp.c -Force
+          Move-Item -Path .\src\tool_hugehelp.c.cvs -Destination .\src\tool_hugehelp.c -Force
           
           $git_head = git rev-parse HEAD
           $git_head = $git_head.Substring(0,7)
