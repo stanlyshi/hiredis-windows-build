@@ -57,9 +57,11 @@ jobs:
           $version_patch = Get-Content -Path .\include\curl\curlver.h | Where-Object { $_ -Match "LIBCURL_VERSION_PATCH" } | ForEach-Object {$_ -Split " "} | Select-Object -Last 1
           $version = $version_major + "." + $version_minor + "." + $version_patch
           echo "version=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
+          
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: ${{ matrix.arch }}
+          
       - name: Build libcurl
         run: |
           cd ${{ github.workspace }}\${{ env.repo }}\winbuild
@@ -67,6 +69,7 @@ jobs:
           nmake /f Makefile.vc MACHINE=${{ matrix.machine }} MODE=${{ matrix.mode }} DEBUG=${{ matrix.debug }}
 
       - name: Prepare libcurl
+        continue-on-error: true
         shell: powershell
         run: |
           cd ${{ github.workspace }}\${{ env.repo }}\winbuild
