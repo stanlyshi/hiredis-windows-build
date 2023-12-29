@@ -63,6 +63,7 @@ jobs:
           arch: ${{ matrix.arch }}
           
       - name: Build libcurl
+        continue-on-error: true
         run: |
           cd ${{ github.workspace }}\${{ env.repo }}\winbuild
           
@@ -85,7 +86,6 @@ jobs:
           
       - name: Release libcurl
         continue-on-error: true
-        if: steps.build.outcome == 'success'
         uses: ncipollo/release-action@main
         with:
           tag: libcurl-${{ env.version }}
