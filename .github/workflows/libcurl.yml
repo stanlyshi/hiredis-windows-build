@@ -1,0 +1,82 @@
+name: Build Libcurl
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: '填写分支或tag'
+        required: false
+        default: 'master'
+  schedule:
+    - cron: 00 9 */3 * *
+env:
+  author: curl
+  repo: curl
+  workspace: ${{ github.workspace }}
+  
+jobs:
+  build:
+    name: Libcurl
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        machine: [x64, x86]
+        mode: [static, dll]
+        debug: [no, yes]
+        
+    steps:
+      - name: Git Config
+        run: git config --global core.autocrlf true
+        
+      #- name: Install 7-Zip using Chocolatey
+        #run: |
+          #choco install 7zip.install -y
+        #shell: powershell
+      
+      - name: Clone Source
+        run: |
+          if ( "${{github.event.inputs.branch}}" -eq "" ) {
+            git clone --recursive https://github.com/${{ env.author }}/${{ env.repo }}.git ${{ github.workspace }}\${{ env.repo }}
+          } else {
+            git clone --recursive https://github.com/${{ env.author }}/${{ env.repo }}.git ${{ github.workspace }}\${{ env.repo }}
+            cd ${{ github.workspace }}\${{ env.repo }}
+            git checkout ${{github.event.inputs.branch}}
+          }
+          cd ${{ github.workspace }}\${{ env.repo }}
+          $git_head = git rev-parse HEAD
+          $git_head = $git_head.Substring(0,7)
+          echo "git_head=$git_head" | Out-File -FilePath $env:GITHUB_ENV -Append
+          $version_major = Get-Content -Path .\include\curl\curlver.h | Where-Object { $_ -Match "LIBCURL_VERSION_MAJOR" } | ForEach-Object {$_ -Split " "} | Select-Object -Last 1
+          $version_minor = Get-Content -Path .\include\curl\curlver.h | Where-Object { $_ -Match "LIBCURL_VERSION_MINOR" } | ForEach-Object {$_ -Split " "} | Select-Object -Last 1
+          $version_patch = Get-Content -Path .\include\curl\curlver.h | Where-Object { $_ -Match "LIBCURL_VERSION_PATCH" } | ForEach-Object {$_ -Split " "} | Select-Object -Last 1
+          $version = $version_major + "." + $version_minor + "." + $version_patch
+          echo "version=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
+          
+      - name: Build libcurl
+        id: build
+        run: |
+          cd ${{ github.workspace }}\${{ env.repo }}\winbuild
+          
+          nmake /f Makefile.vc MACHINE=${{ matrix.machine }} MODE=${{ matrix.mode }} DEBUG=${{ matrix.debug }}
+          
+          Remove-Item ..\builds\*-obj-lib -Force -Recurse
+          Remove-Item ..\builds\*-obj-curl -Force -Recurse
+		  
+          if ("${{ matrix.debug }}" -eq "yes") {
+            7z a -tzip ${{ github.workspace }}\${{ env.repo }}\libcurl-vc-${{ matrix.machine }}-release-${{ matrix.mode }}-${{ env.version }}.zip ${{ github.workspace }}\${{ env.repo }}\builds\*
+          } else {
+            7z a -tzip ${{ github.workspace }}\${{ env.repo }}\libcurl-vc-${{ matrix.machine }}-debug-${{ matrix.mode }}-${{ env.version }}.zip ${{ github.workspace }}\${{ env.repo }}\builds\*
+          }
+          
+      - name: Release libcurl
+        continue-on-error: true
+        if: steps.build.outcome == 'success'
+        uses: ncipollo/release-action@main
+        with:
+          tag: libcurl-${{ env.version }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true
+          removeArtifacts: false
+          body: "${{github.event.inputs.branch}}"
+          artifacts: "${{ github.workspace }}\\${{ env.repo }}\\*.zip"
